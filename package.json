@@ -1,0 +1,46 @@
+{
+  "name": "ai-hrms",
+  "version": "1.0.0",
+  "description": "Enterprise HRMS System with AI Features - Full Stack Application",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm run dev\"",
+    "build": "cd backend && npm run build && cd ../frontend && npm run build",
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "keywords": [
+    "hrms",
+    "human-resources",
+    "employee-management",
+    "payroll",
+    "attendance",
+    "ai",
+    "react",
+    "typescript",
+    "express",
+    "prisma",
+    "redis",
+    "postgresql"
+  ],
+  "author": "AI HRMS Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/ai-hrms.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/ai-hrms/issues"
+  },
+  "homepage": "https://github.com/your-org/ai-hrms#readme"
+} 
