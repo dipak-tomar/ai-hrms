@@ -1,5 +1,5 @@
-import { PrismaClient, User } from '@prisma/client';
-import bcrypt from 'bcrypt';
+import { PrismaClient, User } from "@prisma/client";
+import bcrypt from "bcrypt";
 
 class UserService {
   private prisma = new PrismaClient();
@@ -9,7 +9,7 @@ class UserService {
   }
 
   public async createUser(data: any): Promise<User> {
-    const hashedPassword = await bcrypt.hash(data.password, 10);
+    const hashedPassword = await this.hashPassword(data.password);
     return this.prisma.user.create({
       data: {
         ...data,
@@ -17,6 +17,10 @@ class UserService {
       },
     });
   }
+
+  public async hashPassword(password: string): Promise<string> {
+    return bcrypt.hash(password, 10);
+  }
 }
 
-export const userService = new UserService(); 
+export const userService = new UserService();
