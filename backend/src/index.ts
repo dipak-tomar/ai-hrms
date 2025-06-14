@@ -19,6 +19,7 @@ import departmentRoutes from "./routes/department.routes";
 import employeeRoutes from "./routes/employee.routes";
 import attendanceRoutes from "./routes/attendance.routes";
 import leaveRoutes from "./routes/leave.routes";
+import payrollRoutes from "./routes/payroll.routes";
 
 const app = express();
 const server = createServer(app);
@@ -102,6 +103,7 @@ app.use("/api/departments", departmentRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/leaves", leaveRoutes);
+app.use("/api/payroll", payrollRoutes);
 
 io.on("connection", (socket) => {
   console.log(`User connected: ${socket.id}`);
