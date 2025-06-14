@@ -1,5 +1,5 @@
 import { PrismaClient, UserRole, Prisma } from "@prisma/client";
-import { CreateEmployeeDto, UpdateEmployeeDto } from "../types/employee.dto";
+import { CreateEmployeeDto, UpdateEmployeeDto, SearchEmployeeQueryDto } from "../types/employee.dto";
 import { userService } from "./user.service";
 import { generate } from "randomstring";
 
@@ -59,6 +59,78 @@ class EmployeeService {
     });
   }
 
+  public async searchEmployees(queryParams: SearchEmployeeQueryDto) {
+    const { page = "1", limit = "10", name, email, departmentId, designation } = queryParams;
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    const where: Prisma.EmployeeWhereInput = {};
+
+    if (name) {
+      where.OR = [
+        { firstName: { contains: name, mode: "insensitive" } },
+        { lastName: { contains: name, mode: "insensitive" } },
+      ];
+    }
+    if (email) {
+      where.email = { contains: email, mode: "insensitive" };
+    }
+    if (departmentId) {
+      where.departmentId = departmentId;
+    }
+    if (designation) {
+      where.designation = { contains: designation, mode: "insensitive" };
+    }
+
+    const employees = await this.prisma.employee.findMany({
+      where,
+      skip,
+      take: limitNum,
+      include: {
+        department: true,
+        manager: {
+          select: { firstName: true, lastName: true },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    const totalEmployees = await this.prisma.employee.count({ where });
+
+    return {
+      data: employees,
+      pagination: {
+        total: totalEmployees,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(totalEmployees / limitNum),
+      },
+    };
+  }
+
+  public async getEmployeeByUserId(userId: string) {
+    return this.prisma.employee.findUnique({
+      where: { userId },
+      include: {
+        user: true,
+        department: true,
+        manager: true,
+        subordinates: true,
+        attendances: {
+          orderBy: { date: "desc" },
+          take: 30,
+        },
+        leaves: {
+          orderBy: { appliedAt: "desc" },
+          take: 10,
+        }
+      },
+    });
+  }
+
   public async getEmployeeById(id: string) {
     return this.prisma.employee.findUnique({
       where: { id },
@@ -91,6 +163,13 @@ class EmployeeService {
     return this.prisma.employee.update({
       where: { id },
       data,
+    });
+  }
+
+  public async updateProfilePicture(id: string, filePath: string) {
+    return this.prisma.employee.update({
+      where: { id },
+      data: { profilePicture: filePath },
     });
   }
 

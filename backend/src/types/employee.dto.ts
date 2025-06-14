@@ -32,3 +32,12 @@ export interface UpdateEmployeeDto {
   address?: any;
   emergencyContact?: any;
 }
+
+export interface SearchEmployeeQueryDto {
+  name?: string;
+  email?: string;
+  departmentId?: string;
+  designation?: string;
+  page?: string;
+  limit?: string;
+}

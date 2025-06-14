@@ -6,6 +6,7 @@ import compression from "compression";
 import dotenv from "dotenv";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import path from "path";
 
 dotenv.config();
 
@@ -51,6 +52,8 @@ app.use(compression());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+
 if (NODE_ENV === "development") {
   app.use(morgan("dev"));
 } else {
@@ -58,6 +61,11 @@ if (NODE_ENV === "development") {
 }
 
 app.use("/api", rateLimiter);
+
+// Add a redirect from the root to /api for convenience
+app.get("/", (req, res) => {
+  res.redirect("/api");
+});
 
 app.get("/health", (req, res) => {
   res.status(200).json({
