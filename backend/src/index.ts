@@ -17,6 +17,7 @@ import { rateLimiter } from "./middleware/rateLimiter";
 import authRoutes from "./routes/auth.routes";
 import departmentRoutes from "./routes/department.routes";
 import employeeRoutes from "./routes/employee.routes";
+import attendanceRoutes from "./routes/attendance.routes";
 
 const app = express();
 const server = createServer(app);
@@ -62,7 +63,6 @@ if (NODE_ENV === "development") {
 
 app.use("/api", rateLimiter);
 
-// Add a redirect from the root to /api for convenience
 app.get("/", (req, res) => {
   res.redirect("/api");
 });
@@ -99,6 +99,7 @@ app.get("/api", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/departments", departmentRoutes);
 app.use("/api/employees", employeeRoutes);
+app.use("/api/attendance", attendanceRoutes);
 
 io.on("connection", (socket) => {
   console.log(`User connected: ${socket.id}`);
