@@ -27,7 +27,7 @@ const fileFilter = (req: any, file: any, cb: any) => {
   if (mimetype && extname) {
     return cb(null, true);
   }
-  cb("Error: File type not allowed! Only images are allowed.");
+  cb(new Error("Error: File type not allowed! Only images are allowed."));
 };
 
 export const upload = multer({

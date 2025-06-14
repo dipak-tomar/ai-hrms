@@ -12,7 +12,8 @@ router.post("/", employeeController.create);
 router.get("/", employeeController.getAll);
 router.get("/:id", employeeController.getById);
 router.put("/:id", employeeController.update);
-router.put("/:id/profile-picture", upload.single("profilePicture"), employeeController.uploadProfilePicture);
+const uploadProfilePicture = upload.single("profilePicture");
+router.put("/:id/profile-picture", uploadProfilePicture as any, employeeController.uploadProfilePicture);
 router.delete("/:id", employeeController.delete);
 
 export default router;

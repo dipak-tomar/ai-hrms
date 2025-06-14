@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { useAuthStore } from '../stores/authStore';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
 
 // Create axios instance
 export const apiClient = axios.create({
@@ -82,6 +82,33 @@ export const employeeService = {
   
   deleteEmployee: async (id: string) => {
     const response = await apiClient.delete(`/employees/${id}`);
+    return response.data;
+  },
+};
+
+export const departmentService = {
+  getDepartments: async (params?: any) => {
+    const response = await apiClient.get('/departments', { params });
+    return response.data;
+  },
+  
+  getDepartment: async (id: string) => {
+    const response = await apiClient.get(`/departments/${id}`);
+    return response.data;
+  },
+  
+  createDepartment: async (departmentData: any) => {
+    const response = await apiClient.post('/departments', departmentData);
+    return response.data;
+  },
+  
+  updateDepartment: async (id: string, updates: any) => {
+    const response = await apiClient.put(`/departments/${id}`, updates);
+    return response.data;
+  },
+  
+  deleteDepartment: async (id: string) => {
+    const response = await apiClient.delete(`/departments/${id}`);
     return response.data;
   },
 };

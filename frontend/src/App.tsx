@@ -9,6 +9,9 @@ import DashboardPage from './pages/DashboardPage';
 import EmployeeListPage from './pages/EmployeeListPage';
 import EmployeeDetailPage from './pages/EmployeeDetailPage';
 import NewEmployeePage from './pages/NewEmployeePage';
+import DepartmentListPage from './pages/DepartmentListPage';
+import DepartmentDetailPage from './pages/DepartmentDetailPage';
+import NewDepartmentPage from './pages/NewDepartmentPage';
 import AttendancePage from './pages/AttendancePage';
 import LeavePage from './pages/LeavePage';
 import PayrollPage from './pages/PayrollPage';
@@ -31,6 +34,9 @@ function App() {
           <Route path="/employees" element={<EmployeeListPage />} />
           <Route path="/employees/new" element={<NewEmployeePage />} />
           <Route path="/employees/:id" element={<EmployeeDetailPage />} />
+          <Route path="/departments" element={<DepartmentListPage />} />
+          <Route path="/departments/new" element={<NewDepartmentPage />} />
+          <Route path="/departments/:id" element={<DepartmentDetailPage />} />
           <Route path="/attendance" element={<AttendancePage />} />
           <Route path="/leave" element={<LeavePage />} />
           <Route path="/payroll" element={<PayrollPage />} />

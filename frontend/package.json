@@ -10,8 +10,7 @@
     "lint:fix": "eslint . --fix",
     "preview": "vite preview",
     "test": "jest",
-    "test:watch": "jest --watch",
-    "prepare": "husky install"
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "react": "^18.3.1",
