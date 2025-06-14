@@ -1,7 +1,8 @@
 import React from 'react';
-import { Users, TrendingUp, Calendar, DollarSign, Clock, UserCheck } from 'lucide-react';
+import { Users, TrendingUp, Calendar, UserCheck } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import Card from '../components/Card';
+import ChatbotWidget from '../components/ChatbotWidget';
 
 // Mock data for charts
 const performanceData = [
@@ -252,6 +253,9 @@ const DashboardPage: React.FC = () => {
           </div>
         </Card>
       </div>
+
+      {/* Add ChatbotWidget */}
+      <ChatbotWidget />
     </div>
   );
 };
