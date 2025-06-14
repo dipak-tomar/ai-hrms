@@ -1,0 +1,29 @@
+{
+  "name": "ai-hrms",
+  "version": "1.0.0",
+  "description": "Enterprise HRMS with AI Features - Full Stack Application",
+  "main": "index.js",
+  "license": "MIT",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "build": "concurrently \"npm run build:backend\" \"npm run build:frontend\"",
+    "start:backend": "cd backend && npm run start",
+    "start:frontend": "cd frontend && npm run preview",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+} 
