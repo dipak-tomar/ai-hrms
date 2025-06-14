@@ -21,5 +21,6 @@ export const roleMiddleware = (allowedRoles: UserRole[]) => {
     }
     
     next();
+    return;
   };
 }; 
