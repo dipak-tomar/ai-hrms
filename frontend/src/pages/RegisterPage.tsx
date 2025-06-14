@@ -34,7 +34,7 @@ const RegisterPage: React.FC = () => {
         password: data.password,
       });
       toast.success('Registration successful!');
-    } catch (error) {
+    } catch {
       toast.error('Registration failed. Please try again.');
     }
   };

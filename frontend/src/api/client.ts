@@ -2,6 +2,7 @@ import axios from 'axios';
 import { useAuthStore } from '../stores/authStore';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+console.log('API_BASE_URL:', API_BASE_URL);
 
 // Create axios instance
 export const apiClient = axios.create({
@@ -15,6 +16,8 @@ export const apiClient = axios.create({
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
   (config) => {
+    console.log('Making API request to:', config.url, 'with method:', config.method);
+    console.log('Request data:', config.data);
     const token = useAuthStore.getState().token;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -22,6 +25,7 @@ apiClient.interceptors.request.use(
     return config;
   },
   (error) => {
+    console.error('Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
@@ -29,9 +33,20 @@ apiClient.interceptors.request.use(
 // Response interceptor for error handling
 apiClient.interceptors.response.use(
   (response) => {
+    console.log('API response received:', response.status, response.data);
     return response;
   },
   (error) => {
+    console.error('API response error:', error);
+    if (error.response) {
+      console.error('Error response data:', error.response.data);
+      console.error('Error response status:', error.response.status);
+    } else if (error.request) {
+      console.error('Error request:', error.request);
+    } else {
+      console.error('Error message:', error.message);
+    }
+    
     if (error.response?.status === 401) {
       // Token expired or invalid
       useAuthStore.getState().logout();
@@ -49,8 +64,14 @@ export const authService = {
   },
   
   register: async (userData: any) => {
-    const response = await apiClient.post('/auth/register', userData);
-    return response.data;
+    console.log('authService.register called with:', userData);
+    try {
+      const response = await apiClient.post('/auth/register', userData);
+      return response.data;
+    } catch (error) {
+      console.error('authService.register error:', error);
+      throw error;
+    }
   },
   
   refreshToken: async () => {

@@ -53,9 +53,12 @@ export const useAuthStore = create<AuthState>()(
 
       register: async (userData) => {
         set({ isLoading: true });
+        console.log('Register function called with data:', userData);
         try {
           // Use the API client instead of mock data
+          console.log('Making API request to:', '/auth/register');
           const response = await authService.register(userData);
+          console.log('Registration successful, response:', response);
           set({ 
             user: response.user, 
             token: response.token, 
@@ -63,6 +66,7 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: true 
           });
         } catch (error) {
+          console.error('Registration failed with error:', error);
           set({ isLoading: false });
           throw error;
         }
