@@ -123,6 +123,154 @@ export interface CalendarEvent {
   color?: string;
 }
 
+export interface AllowanceItem {
+  name: string;
+  amount: number;
+  description?: string;
+}
+
+export interface DeductionItem {
+  name: string;
+  amount: number;
+  description?: string;
+}
+
+export interface Payroll {
+  id: string;
+  employeeId: string;
+  month: number;
+  year: number;
+  basicSalary: number;
+  allowances: AllowanceItem[];
+  deductions: DeductionItem[];
+  grossSalary: number;
+  netSalary: number;
+  taxAmount: number;
+  status: 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'PAID';
+  generatedAt: string;
+  paidAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  employee?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    employeeId: string;
+  };
+}
+
+export interface PayrollReport {
+  totalEmployees: number;
+  totalPayroll: number;
+  averageSalary: number;
+  totalTax: number;
+  totalAllowances: number;
+  totalDeductions: number;
+  payrollByDepartment?: {
+    departmentName: string;
+    employeeCount: number;
+    totalSalary: number;
+  }[];
+}
+
+export interface Payslip {
+  payroll: Payroll;
+  employee: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    employeeId: string;
+    designation: string;
+    department: {
+      name: string;
+    };
+  };
+  company: {
+    name: string;
+    address: string;
+    logo?: string;
+  };
+}
+
+export interface Goal {
+  id: string;
+  employeeId: string;
+  title: string;
+  description?: string;
+  targetDate: string;
+  status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  createdAt: string;
+  updatedAt: string;
+  employee?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    employeeId: string;
+  };
+}
+
+export interface PerformanceReview {
+  id: string;
+  revieweeId: string;
+  reviewerId: string;
+  revieweeUserId: string;
+  reviewerUserId: string;
+  period: string;
+  overallRating: number;
+  feedback?: string;
+  goals?: Goal[];
+  achievements?: Array<{
+    id: string;
+    title: string;
+    description?: string;
+    date: string;
+  }>;
+  status: 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'COMPLETED';
+  submittedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  reviewee?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    employeeId: string;
+  };
+  reviewer?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    employeeId: string;
+  };
+}
+
+export interface PerformanceMetrics {
+  employeeId: string;
+  averageRating: number;
+  completedGoals: number;
+  pendingGoals: number;
+  reviewCount: number;
+  latestReviewDate?: string;
+  latestReviewRating?: number;
+  employeeName?: string;
+}
+
+export interface TeamPerformance {
+  departmentId: string;
+  departmentName: string;
+  averageRating: number;
+  topPerformers: {
+    employeeId: string;
+    employeeName: string;
+    rating: number;
+  }[];
+  improvementNeeded: {
+    employeeId: string;
+    employeeName: string;
+    rating: number;
+  }[];
+  goalCompletionRate: number;
+}
+
 // Create axios instance
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -360,6 +508,245 @@ export const leaveService = {
   
   generateCalendarLink: async (): Promise<{ url: string }> => {
     const response = await apiClient.get('/leave/calendar/link');
+    return response.data;
+  },
+};
+
+export const payrollService = {
+  // Get all payrolls (HR/Admin only)
+  getAllPayrolls: async (params?: {
+    month?: number;
+    year?: number;
+    status?: string;
+    employeeId?: string;
+    departmentId?: string;
+  }): Promise<Payroll[]> => {
+    const response = await apiClient.get('/payroll', { params });
+    return response.data;
+  },
+  
+  // Get my payroll (for employees)
+  getMyPayroll: async (params?: {
+    month?: number;
+    year?: number;
+  }): Promise<Payroll[]> => {
+    const response = await apiClient.get('/payroll/my', { params });
+    return response.data;
+  },
+  
+  // Get a specific payroll by ID
+  getPayrollById: async (id: string): Promise<Payroll> => {
+    const response = await apiClient.get(`/payroll/${id}`);
+    return response.data;
+  },
+  
+  // Create a single payroll
+  createPayroll: async (data: {
+    employeeId: string;
+    month: number;
+    year: number;
+    basicSalary: number;
+    allowances?: AllowanceItem[];
+    deductions?: DeductionItem[];
+  }): Promise<Payroll> => {
+    const response = await apiClient.post('/payroll', data);
+    return response.data;
+  },
+  
+  // Update a payroll
+  updatePayroll: async (id: string, data: {
+    basicSalary?: number;
+    allowances?: AllowanceItem[];
+    deductions?: DeductionItem[];
+    status?: 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'PAID';
+  }): Promise<Payroll> => {
+    const response = await apiClient.put(`/payroll/${id}`, data);
+    return response.data;
+  },
+  
+  // Delete a payroll
+  deletePayroll: async (id: string): Promise<{ message: string }> => {
+    const response = await apiClient.delete(`/payroll/${id}`);
+    return response.data;
+  },
+  
+  // Generate payrolls for a month
+  generatePayrolls: async (data: {
+    month: number;
+    year: number;
+    departmentId?: string;
+  }): Promise<{ count: number; message: string }> => {
+    const response = await apiClient.post('/payroll/generate', data);
+    return response.data;
+  },
+  
+  // Approve a payroll
+  approvePayroll: async (id: string): Promise<Payroll> => {
+    const response = await apiClient.post(`/payroll/${id}/approve`);
+    return response.data;
+  },
+  
+  // Mark a payroll as paid
+  markAsPaid: async (id: string): Promise<Payroll> => {
+    const response = await apiClient.post(`/payroll/${id}/pay`);
+    return response.data;
+  },
+  
+  // Generate a payslip
+  generatePayslip: async (id: string): Promise<Payslip> => {
+    const response = await apiClient.get(`/payroll/${id}/payslip`);
+    return response.data;
+  },
+  
+  // Get payroll report
+  getPayrollReport: async (params: {
+    month?: number;
+    year?: number;
+    departmentId?: string;
+  }): Promise<PayrollReport> => {
+    const response = await apiClient.get('/payroll/report', { params });
+    return response.data;
+  },
+};
+
+export const performanceService = {
+  // Goals Management
+  getMyGoals: async (): Promise<Goal[]> => {
+    const response = await apiClient.get('/performance/goals/my');
+    return response.data;
+  },
+  
+  getEmployeeGoals: async (employeeId: string): Promise<Goal[]> => {
+    const response = await apiClient.get(`/performance/employees/${employeeId}/goals`);
+    return response.data;
+  },
+  
+  getGoalById: async (id: string): Promise<Goal> => {
+    const response = await apiClient.get(`/performance/goals/${id}`);
+    return response.data;
+  },
+  
+  createGoal: async (data: {
+    employeeId: string;
+    title: string;
+    description?: string;
+    targetDate: string;
+    status?: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  }): Promise<Goal> => {
+    const response = await apiClient.post('/performance/goals', data);
+    return response.data;
+  },
+  
+  updateGoal: async (id: string, data: {
+    title?: string;
+    description?: string;
+    targetDate?: string;
+    status?: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  }): Promise<Goal> => {
+    const response = await apiClient.put(`/performance/goals/${id}`, data);
+    return response.data;
+  },
+  
+  deleteGoal: async (id: string): Promise<{ message: string }> => {
+    const response = await apiClient.delete(`/performance/goals/${id}`);
+    return response.data;
+  },
+  
+  // Performance Reviews
+  getMyPerformanceReviews: async (): Promise<PerformanceReview[]> => {
+    const response = await apiClient.get('/performance/reviews/my');
+    return response.data;
+  },
+  
+  getReviewsToComplete: async (): Promise<PerformanceReview[]> => {
+    const response = await apiClient.get('/performance/reviews/to-complete');
+    return response.data;
+  },
+  
+  getPerformanceReviews: async (params?: {
+    revieweeId?: string;
+    reviewerId?: string;
+    period?: string;
+    status?: string;
+  }): Promise<PerformanceReview[]> => {
+    const response = await apiClient.get('/performance/reviews', { params });
+    return response.data;
+  },
+  
+  getPerformanceReviewById: async (id: string): Promise<PerformanceReview> => {
+    const response = await apiClient.get(`/performance/reviews/${id}`);
+    return response.data;
+  },
+  
+  createPerformanceReview: async (data: {
+    revieweeId: string;
+    reviewerId: string;
+    revieweeUserId: string;
+    reviewerUserId: string;
+    period: string;
+    overallRating?: number;
+    feedback?: string;
+    goals?: Goal[];
+    achievements?: Array<{
+      id: string;
+      title: string;
+      description?: string;
+      date: string;
+    }>;
+  }): Promise<PerformanceReview> => {
+    const response = await apiClient.post('/performance/reviews', data);
+    return response.data;
+  },
+  
+  updatePerformanceReview: async (id: string, data: {
+    overallRating?: number;
+    feedback?: string;
+    goals?: Goal[];
+    achievements?: Array<{
+      id: string;
+      title: string;
+      description?: string;
+      date: string;
+    }>;
+    status?: 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'COMPLETED';
+  }): Promise<PerformanceReview> => {
+    const response = await apiClient.put(`/performance/reviews/${id}`, data);
+    return response.data;
+  },
+  
+  submitPerformanceReview: async (id: string): Promise<PerformanceReview> => {
+    const response = await apiClient.post(`/performance/reviews/${id}/submit`);
+    return response.data;
+  },
+  
+  approvePerformanceReview: async (id: string): Promise<PerformanceReview> => {
+    const response = await apiClient.post(`/performance/reviews/${id}/approve`);
+    return response.data;
+  },
+  
+  rejectPerformanceReview: async (id: string): Promise<PerformanceReview> => {
+    const response = await apiClient.post(`/performance/reviews/${id}/reject`);
+    return response.data;
+  },
+  
+  deletePerformanceReview: async (id: string): Promise<{ message: string }> => {
+    const response = await apiClient.delete(`/performance/reviews/${id}`);
+    return response.data;
+  },
+  
+  // Performance Metrics
+  getMyPerformanceMetrics: async (): Promise<PerformanceMetrics> => {
+    const response = await apiClient.get('/performance/metrics/my');
+    return response.data;
+  },
+  
+  getEmployeePerformanceMetrics: async (employeeId: string): Promise<PerformanceMetrics> => {
+    const response = await apiClient.get(`/performance/metrics/employees/${employeeId}`);
+    return response.data;
+  },
+  
+  getTeamPerformance: async (departmentId: string): Promise<TeamPerformance> => {
+    const response = await apiClient.get(`/performance/metrics/departments/${departmentId}`);
     return response.data;
   },
 };
