@@ -1,65 +1,133 @@
-import React, { useState } from 'react';
-import { Plus, Calendar, Check, X, Clock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Calendar, Check, X, Loader } from 'lucide-react';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import clsx from 'clsx';
+import { leaveService } from '../api/client';
+import { LeaveApplication, LeaveBalance, LeaveType } from '../api/client';
+import toast from 'react-hot-toast';
 
-// Mock data
-const leaveRequests = [
-  {
-    id: '1',
-    employee: 'Sarah Johnson',
-    type: 'Annual Leave',
-    startDate: '2024-01-20',
-    endDate: '2024-01-22',
-    days: 3,
-    reason: 'Family vacation',
-    status: 'pending',
-    appliedOn: '2024-01-15',
-  },
-  {
-    id: '2',
-    employee: 'Michael Chen',
-    type: 'Sick Leave',
-    startDate: '2024-01-18',
-    endDate: '2024-01-18',
-    days: 1,
-    reason: 'Medical appointment',
-    status: 'approved',
-    appliedOn: '2024-01-17',
-  },
-  {
-    id: '3',
-    employee: 'Emily Rodriguez',
-    type: 'Personal Leave',
-    startDate: '2024-01-25',
-    endDate: '2024-01-26',
-    days: 2,
-    reason: 'Personal matters',
-    status: 'rejected',
-    appliedOn: '2024-01-16',
-  },
-];
+interface LeaveFormData {
+  leaveTypeId: string;
+  startDate: string;
+  endDate: string;
+  reason: string;
+}
 
 const LeavePage: React.FC = () => {
   const [showApplyForm, setShowApplyForm] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const [isLoading, setIsLoading] = useState(false);
+  const [leaveRequests, setLeaveRequests] = useState<LeaveApplication[]>([]);
+  const [leaveBalances, setLeaveBalances] = useState<LeaveBalance[]>([]);
+  const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
+  const [formData, setFormData] = useState<LeaveFormData>({
+    leaveTypeId: '',
+    startDate: '',
+    endDate: '',
+    reason: ''
+  });
+
+  useEffect(() => {
+    fetchLeaveData();
+  }, []);
+
+  const fetchLeaveData = async () => {
+    setIsLoading(true);
+    try {
+      // Fetch leave applications
+      const applications = await leaveService.getLeaveApplications();
+      setLeaveRequests(applications);
+
+      // Fetch leave balances
+      const balances = await leaveService.getLeaveBalance();
+      setLeaveBalances(balances);
+
+      // Fetch leave types for the form
+      const types = await leaveService.getLeaveTypes({ isActive: true });
+      setLeaveTypes(types);
+    } catch (error) {
+      console.error('Error fetching leave data:', error);
+      toast.error('Failed to load leave data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleApplyForLeave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.leaveTypeId || !formData.startDate || !formData.endDate || !formData.reason) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      await leaveService.applyForLeave(formData);
+      toast.success('Leave application submitted successfully');
+      setShowApplyForm(false);
+      // Reset form data
+      setFormData({
+        leaveTypeId: '',
+        startDate: '',
+        endDate: '',
+        reason: ''
+      });
+      // Refresh leave data
+      fetchLeaveData();
+    } catch (error) {
+      console.error('Error applying for leave:', error);
+      toast.error('Failed to submit leave application');
+    }
+  };
+
+  const handleCancelLeave = async (id: string) => {
+    try {
+      await leaveService.cancelLeaveApplication(id);
+      toast.success('Leave application cancelled successfully');
+      fetchLeaveData();
+    } catch (error) {
+      console.error('Error cancelling leave:', error);
+      toast.error('Failed to cancel leave application');
+    }
+  };
+
+  const handleUpdateLeaveStatus = async (id: string, status: 'APPROVED' | 'REJECTED', rejectedReason?: string) => {
+    try {
+      await leaveService.updateLeaveApplication(id, { status, rejectedReason });
+      toast.success(`Leave application ${status.toLowerCase()} successfully`);
+      fetchLeaveData();
+    } catch (error) {
+      console.error('Error updating leave status:', error);
+      toast.error('Failed to update leave status');
+    }
+  };
+
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
   const getStatusBadge = (status: string) => {
     const styles = {
-      pending: 'bg-warning/10 text-warning',
-      approved: 'bg-success/10 text-success',
-      rejected: 'bg-danger/10 text-danger',
+      PENDING: 'bg-warning/10 text-warning',
+      APPROVED: 'bg-success/10 text-success',
+      REJECTED: 'bg-danger/10 text-danger',
+      CANCELLED: 'bg-gray-200 text-gray-600',
     };
     
     return (
       <span className={clsx(
         'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
-        styles[status as keyof typeof styles] || styles.pending
+        styles[status as keyof typeof styles] || styles.PENDING
       )}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+        {status.charAt(0) + status.slice(1).toLowerCase()}
       </span>
     );
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
   };
 
   return (
@@ -100,41 +168,140 @@ const LeavePage: React.FC = () => {
 
       {/* Leave Balance Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        {[
-          { type: 'Annual Leave', used: 8, total: 20, color: 'primary' },
-          { type: 'Sick Leave', used: 3, total: 10, color: 'danger' },
-          { type: 'Personal Leave', used: 2, total: 5, color: 'warning' },
-          { type: 'Maternity Leave', used: 0, total: 90, color: 'success' },
-        ].map((leave) => (
-          <Card key={leave.type}>
-            <div className="p-4 sm:p-6">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-text-secondary">{leave.type}</h3>
-                <Calendar className="w-5 h-5 text-text-secondary" />
+        {isLoading ? (
+          Array(4).fill(0).map((_, index) => (
+            <Card key={index}>
+              <div className="p-4 sm:p-6 flex items-center justify-center">
+                <Loader className="w-6 h-6 text-primary animate-spin" />
               </div>
-              <div className="flex items-baseline">
-                <p className="text-xl sm:text-2xl font-semibold text-text-primary">
-                  {leave.total - leave.used}
-                </p>
-                <span className="ml-1 text-sm text-text-secondary">
-                  / {leave.total} days
-                </span>
+            </Card>
+          ))
+        ) : (
+          leaveBalances.map((balance) => (
+            <Card key={balance.leaveTypeId}>
+              <div className="p-4 sm:p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-medium text-text-secondary">{balance.leaveTypeName}</h3>
+                  <Calendar className="w-5 h-5 text-text-secondary" />
+                </div>
+                <div className="flex items-baseline">
+                  <p className="text-xl sm:text-2xl font-semibold text-text-primary">
+                    {balance.remaining}
+                  </p>
+                  <span className="ml-1 text-sm text-text-secondary">
+                    / {balance.maxDays} days
+                  </span>
+                </div>
+                <div className="mt-2">
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-primary h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${(balance.used / balance.maxDays) * 100}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-text-secondary mt-1">
+                    {balance.used} days used, {balance.pending} pending
+                  </p>
+                </div>
               </div>
-              <div className="mt-2">
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className={`bg-${leave.color} h-2 rounded-full transition-all duration-300`}
-                    style={{ width: `${(leave.used / leave.total) * 100}%` }}
+            </Card>
+          ))
+        )}
+      </div>
+
+      {/* Leave Application Form */}
+      {showApplyForm && (
+        <Card>
+          <div className="p-4 sm:p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-heading font-semibold text-text-primary">
+                Apply for Leave
+              </h3>
+              <button 
+                onClick={() => setShowApplyForm(false)}
+                className="text-text-secondary hover:text-danger"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleApplyForLeave} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-1">
+                  Leave Type
+                </label>
+                <select
+                  name="leaveTypeId"
+                  value={formData.leaveTypeId}
+                  onChange={handleFormChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                  required
+                >
+                  <option value="">Select Leave Type</option>
+                  {leaveTypes.map(type => (
+                    <option key={type.id} value={type.id}>{type.name}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-1">
+                    Start Date
+                  </label>
+                  <input
+                    type="date"
+                    name="startDate"
+                    value={formData.startDate}
+                    onChange={handleFormChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                    required
                   />
                 </div>
-                <p className="text-xs text-text-secondary mt-1">
-                  {leave.used} days used
-                </p>
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-1">
+                    End Date
+                  </label>
+                  <input
+                    type="date"
+                    name="endDate"
+                    value={formData.endDate}
+                    onChange={handleFormChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                    required
+                  />
+                </div>
               </div>
-            </div>
-          </Card>
-        ))}
-      </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-1">
+                  Reason
+                </label>
+                <textarea
+                  name="reason"
+                  value={formData.reason}
+                  onChange={handleFormChange}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                  required
+                ></textarea>
+              </div>
+              
+              <div className="flex justify-end space-x-3">
+                <Button 
+                  type="button" 
+                  variant="secondary" 
+                  size="sm"
+                  onClick={() => setShowApplyForm(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" size="sm">Submit Request</Button>
+              </div>
+            </form>
+          </div>
+        </Card>
+      )}
 
       {/* Leave Requests */}
       {viewMode === 'list' ? (
@@ -145,99 +312,153 @@ const LeavePage: React.FC = () => {
             </h3>
           </div>
           
-          {/* Desktop Table View */}
-          <div className="hidden lg:block overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                    Employee
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                    Leave Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                    Duration
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                    Reason
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-text-secondary uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {leaveRequests.map((request) => (
-                  <tr key={request.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text-primary">
-                      {request.employee}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-text-primary">
-                      {request.type}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
-                      {new Date(request.startDate).toLocaleDateString()} - {new Date(request.endDate).toLocaleDateString()}
-                      <br />
-                      <span className="text-xs">({request.days} days)</span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-text-secondary max-w-xs truncate">
-                      {request.reason}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(request.status)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      {request.status === 'pending' && (
-                        <div className="flex items-center justify-end space-x-2">
-                          <button className="text-success hover:text-green-700 transition-colors">
+          {isLoading ? (
+            <div className="flex justify-center items-center p-8">
+              <Loader className="w-8 h-8 text-primary animate-spin" />
+            </div>
+          ) : (
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden lg:block overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                        Employee
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                        Leave Type
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                        Duration
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                        Reason
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-text-secondary uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {leaveRequests.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
+                          No leave requests found
+                        </td>
+                      </tr>
+                    ) : (
+                      leaveRequests.map((request) => (
+                        <tr key={request.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text-primary">
+                            {request.employee ? `${request.employee.firstName} ${request.employee.lastName}` : 'N/A'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-text-primary">
+                            {request.leaveType?.name || 'N/A'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
+                            {formatDate(request.startDate)} - {formatDate(request.endDate)}
+                            <br />
+                            <span className="text-xs">({request.days} days)</span>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-text-secondary max-w-xs truncate">
+                            {request.reason}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {getStatusBadge(request.status)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            {request.status === 'PENDING' && (
+                              <div className="flex items-center justify-end space-x-2">
+                                <button 
+                                  className="text-success hover:text-green-700 transition-colors"
+                                  onClick={() => handleUpdateLeaveStatus(request.id, 'APPROVED')}
+                                >
+                                  <Check className="w-4 h-4" />
+                                </button>
+                                <button 
+                                  className="text-danger hover:text-red-700 transition-colors"
+                                  onClick={() => handleUpdateLeaveStatus(request.id, 'REJECTED')}
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+                            )}
+                            {request.status === 'APPROVED' && (
+                              <button 
+                                className="text-danger hover:text-red-700 transition-colors"
+                                onClick={() => handleCancelLeave(request.id)}
+                              >
+                                Cancel
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="lg:hidden divide-y divide-gray-200">
+                {leaveRequests.length === 0 ? (
+                  <div className="p-4 text-center text-sm text-gray-500">
+                    No leave requests found
+                  </div>
+                ) : (
+                  leaveRequests.map((request) => (
+                    <div key={request.id} className="p-4 hover:bg-gray-50 transition-colors">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-text-primary">
+                            {request.employee ? `${request.employee.firstName} ${request.employee.lastName}` : 'N/A'}
+                          </p>
+                          <p className="text-sm text-text-secondary">{request.leaveType?.name || 'N/A'}</p>
+                        </div>
+                        {getStatusBadge(request.status)}
+                      </div>
+                      <div className="space-y-1 text-sm text-text-secondary">
+                        <p>
+                          {formatDate(request.startDate)} - {formatDate(request.endDate)} ({request.days} days)
+                        </p>
+                        <p className="truncate">{request.reason}</p>
+                      </div>
+                      {request.status === 'PENDING' && (
+                        <div className="flex items-center justify-end space-x-2 mt-3">
+                          <button 
+                            className="text-success hover:text-green-700 transition-colors p-1"
+                            onClick={() => handleUpdateLeaveStatus(request.id, 'APPROVED')}
+                          >
                             <Check className="w-4 h-4" />
                           </button>
-                          <button className="text-danger hover:text-red-700 transition-colors">
+                          <button 
+                            className="text-danger hover:text-red-700 transition-colors p-1"
+                            onClick={() => handleUpdateLeaveStatus(request.id, 'REJECTED')}
+                          >
                             <X className="w-4 h-4" />
                           </button>
                         </div>
                       )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile Card View */}
-          <div className="lg:hidden divide-y divide-gray-200">
-            {leaveRequests.map((request) => (
-              <div key={request.id} className="p-4 hover:bg-gray-50 transition-colors">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-text-primary">{request.employee}</p>
-                    <p className="text-sm text-text-secondary">{request.type}</p>
-                  </div>
-                  {getStatusBadge(request.status)}
-                </div>
-                <div className="space-y-1 text-sm text-text-secondary">
-                  <p>
-                    {new Date(request.startDate).toLocaleDateString()} - {new Date(request.endDate).toLocaleDateString()} ({request.days} days)
-                  </p>
-                  <p className="truncate">{request.reason}</p>
-                </div>
-                {request.status === 'pending' && (
-                  <div className="flex items-center justify-end space-x-2 mt-3">
-                    <button className="text-success hover:text-green-700 transition-colors p-1">
-                      <Check className="w-4 h-4" />
-                    </button>
-                    <button className="text-danger hover:text-red-700 transition-colors p-1">
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
+                      {request.status === 'APPROVED' && (
+                        <div className="flex justify-end mt-3">
+                          <button 
+                            className="text-danger hover:text-red-700 transition-colors text-sm"
+                            onClick={() => handleCancelLeave(request.id)}
+                          >
+                            Cancel Leave
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))
                 )}
               </div>
-            ))}
-          </div>
+            </>
+          )}
         </Card>
       ) : (
         <Card>
@@ -247,83 +468,13 @@ const LeavePage: React.FC = () => {
             </h3>
             <div className="bg-gray-50 rounded-lg p-8 text-center">
               <Calendar className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <p className="text-text-secondary">Calendar view will be implemented here</p>
+              <p className="text-text-secondary">Calendar view will be implemented soon</p>
               <p className="text-sm text-text-secondary mt-2">
-                This would show approved/pending leaves in a calendar format
+                View team availability and plan your leaves accordingly
               </p>
             </div>
           </div>
         </Card>
-      )}
-
-      {/* Apply for Leave Modal */}
-      {showApplyForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-heading font-semibold text-text-primary mb-4">
-              Apply for Leave
-            </h3>
-            <form className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">
-                  Leave Type
-                </label>
-                <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
-                  <option>Annual Leave</option>
-                  <option>Sick Leave</option>
-                  <option>Personal Leave</option>
-                  <option>Maternity Leave</option>
-                </select>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-text-primary mb-1">
-                    Start Date
-                  </label>
-                  <input
-                    type="date"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text-primary mb-1">
-                    End Date
-                  </label>
-                  <input
-                    type="date"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">
-                  Reason
-                </label>
-                <textarea
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                  placeholder="Enter reason for leave"
-                />
-              </div>
-
-              <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3 pt-4">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => setShowApplyForm(false)}
-                  className="w-full sm:w-auto"
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" className="w-full sm:w-auto">
-                  Submit Request
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
       )}
     </div>
   );

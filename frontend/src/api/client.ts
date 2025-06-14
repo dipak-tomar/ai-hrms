@@ -69,6 +69,60 @@ export interface AttendanceSummary {
   totalOvertime?: number;
 }
 
+export interface LeaveType {
+  id: string;
+  name: string;
+  description?: string;
+  maxDays: number;
+  carryForward: boolean;
+  isActive: boolean;
+}
+
+export interface LeaveBalance {
+  leaveTypeId: string;
+  leaveTypeName: string;
+  maxDays: number;
+  used: number;
+  remaining: number;
+  pending: number;
+}
+
+export interface LeaveApplication {
+  id: string;
+  employeeId: string;
+  leaveTypeId: string;
+  startDate: string;
+  endDate: string;
+  days: number;
+  reason: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
+  appliedOn: string;
+  approvedBy?: string;
+  rejectedReason?: string;
+  employee?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+  };
+  leaveType?: {
+    id: string;
+    name: string;
+  };
+}
+
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  start: string;
+  end: string;
+  allDay: boolean;
+  employeeId: string;
+  employeeName: string;
+  leaveType: string;
+  status: string;
+  color?: string;
+}
+
 // Create axios instance
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -222,6 +276,90 @@ export const attendanceService = {
   
   generateReport: async (data: { employeeId?: string, month: number, year: number }): Promise<AttendanceSummary> => {
     const response = await apiClient.post('/attendance/report', data);
+    return response.data;
+  },
+};
+
+export const leaveService = {
+  // Leave Types
+  getLeaveTypes: async (params?: Record<string, unknown>): Promise<LeaveType[]> => {
+    const response = await apiClient.get('/leave/types', { params });
+    return response.data;
+  },
+  
+  getLeaveTypeById: async (id: string): Promise<LeaveType> => {
+    const response = await apiClient.get(`/leave/types/${id}`);
+    return response.data;
+  },
+  
+  createLeaveType: async (data: Omit<LeaveType, 'id' | 'isActive'>): Promise<{ leaveType: LeaveType }> => {
+    const response = await apiClient.post('/leave/types', data);
+    return response.data;
+  },
+  
+  updateLeaveType: async (id: string, data: Partial<LeaveType>): Promise<{ leaveType: LeaveType }> => {
+    const response = await apiClient.put(`/leave/types/${id}`, data);
+    return response.data;
+  },
+  
+  deleteLeaveType: async (id: string): Promise<{ message: string }> => {
+    const response = await apiClient.delete(`/leave/types/${id}`);
+    return response.data;
+  },
+  
+  // Leave Applications
+  getLeaveApplications: async (params?: Record<string, unknown>): Promise<LeaveApplication[]> => {
+    const response = await apiClient.get('/leave/applications', { params });
+    return response.data;
+  },
+  
+  getLeaveApplicationById: async (id: string): Promise<LeaveApplication> => {
+    const response = await apiClient.get(`/leave/applications/${id}`);
+    return response.data;
+  },
+  
+  applyForLeave: async (data: {
+    leaveTypeId: string;
+    startDate: string;
+    endDate: string;
+    reason: string;
+  }): Promise<{ leave: LeaveApplication }> => {
+    const response = await apiClient.post('/leave/apply', data);
+    return response.data;
+  },
+  
+  updateLeaveApplication: async (
+    id: string,
+    data: { status: 'APPROVED' | 'REJECTED'; rejectedReason?: string }
+  ): Promise<{ leave: LeaveApplication }> => {
+    const response = await apiClient.put(`/leave/applications/${id}/approve-reject`, data);
+    return response.data;
+  },
+  
+  cancelLeaveApplication: async (id: string): Promise<{ leave: LeaveApplication }> => {
+    const response = await apiClient.put(`/leave/applications/${id}/cancel`, {});
+    return response.data;
+  },
+  
+  // Leave Balance
+  getLeaveBalance: async (params?: { year?: number }): Promise<LeaveBalance[]> => {
+    const response = await apiClient.get('/leave/balance', { params });
+    return response.data;
+  },
+  
+  // Calendar
+  getCalendarEvents: async (params: {
+    startDate: string;
+    endDate: string;
+    employeeId?: string;
+    departmentId?: string;
+  }): Promise<CalendarEvent[]> => {
+    const response = await apiClient.get('/leave/calendar', { params });
+    return response.data;
+  },
+  
+  generateCalendarLink: async (): Promise<{ url: string }> => {
+    const response = await apiClient.get('/leave/calendar/link');
     return response.data;
   },
 };
