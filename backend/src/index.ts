@@ -21,9 +21,12 @@ import attendanceRoutes from "./routes/attendance.routes";
 import leaveRoutes from "./routes/leave.routes";
 import payrollRoutes from "./routes/payroll.routes";
 import performanceRoutes from "./routes/performance.routes";
+import chatRoutes from "./routes/chat.routes";
 
 const app = express();
 const server = createServer(app);
+
+// Create Socket.io server with error handling
 const io = new Server(server, {
   cors: {
     origin: process.env.FRONTEND_URL || "http://localhost:3000",
@@ -31,74 +34,51 @@ const io = new Server(server, {
   }
 });
 
-const PORT = process.env.PORT || 3001;
-const NODE_ENV = process.env.NODE_ENV || "development";
+// Handle Socket.io errors
+io.on("error", (error) => {
+  console.error("Socket.io error:", error);
+});
 
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["\"self\""],
-      styleSrc: ["\"self\"", "\"unsafe-inline\""],
-      scriptSrc: ["\"self\""],
-      imgSrc: ["\"self\"", "data:", "https:"],
-    },
-  },
+// Socket.io connection handling
+io.on("connection", (socket) => {
+  console.log("New client connected");
+  
+  // Join user-specific room for targeted messages
+  socket.on("join-user", (userId) => {
+    socket.join(`user-${userId}`);
+    console.log(`User ${userId} joined their room`);
+  });
+  
+  socket.on("disconnect", () => {
+    console.log("Client disconnected");
+  });
+  
+  socket.on("error", (error) => {
+    console.error("Socket error:", error);
+  });
+});
+
+// Middleware
+app.use(cors({
+  origin: process.env.FRONTEND_URL || "http://localhost:3000",
+  credentials: true
 }));
-
-const corsOptions = {
-  origin: process.env.ALLOWED_ORIGINS?.split(",") || ["http://localhost:3000"],
-  credentials: true,
-  optionsSuccessStatus: 200,
-};
-app.use(cors(corsOptions));
-
+app.use(helmet());
 app.use(compression());
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(morgan("dev"));
+app.use(rateLimiter);
 
+// Static files
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
-if (NODE_ENV === "development") {
-  app.use(morgan("dev"));
-} else {
-  app.use(morgan("combined"));
-}
-
-app.use("/api", rateLimiter);
-
-app.get("/", (req, res) => {
-  res.redirect("/api");
+// Health check endpoint
+app.get("/api/health", (req, res) => {
+  res.status(200).json({ status: "ok", timestamp: new Date() });
 });
 
-app.get("/health", (req, res) => {
-  res.status(200).json({
-    status: "OK",
-    message: "AI HRMS Backend is running",
-    timestamp: new Date().toISOString(),
-    environment: NODE_ENV,
-    version: "1.0.0"
-  });
-});
-
-app.get("/api", (req, res) => {
-  res.json({
-    message: "Welcome to AI HRMS API",
-    version: "v1",
-    documentation: "/api/docs",
-    endpoints: {
-      health: "/health",
-      auth: "/api/auth",
-      departments: "/api/departments",
-      employees: "/api/employees",
-      attendance: "/api/attendance",
-      leaves: "/api/leaves",
-      payroll: "/api/payroll",
-      performance: "/api/performance",
-      ai: "/api/ai"
-    }
-  });
-});
-
+// API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/departments", departmentRoutes);
 app.use("/api/employees", employeeRoutes);
@@ -106,45 +86,29 @@ app.use("/api/attendance", attendanceRoutes);
 app.use("/api/leaves", leaveRoutes);
 app.use("/api/payroll", payrollRoutes);
 app.use("/api/performance", performanceRoutes);
+app.use("/api/chat", chatRoutes);
 
-io.on("connection", (socket) => {
-  console.log(`User connected: ${socket.id}`);
-  
-  socket.on("join-user-room", (userId) => {
-    socket.join(`user-${userId}`);
-    console.log(`User ${userId} joined their room`);
-  });
-
-  socket.on("chatbot-message", (data) => {
-    console.log("Chatbot message received:", data);
-  });
-
-  socket.on("disconnect", () => {
-    console.log(`User disconnected: ${socket.id}`);
-  });
-});
-
+// Error handling
 app.use(notFound);
 app.use(errorHandler);
 
-server.listen(PORT, () => {
-  console.log(`
-🚀 AI HRMS Backend Server Started!
-📍 Environment: ${NODE_ENV}
-🌐 Server: http://localhost:${PORT}
-📊 Health Check: http://localhost:${PORT}/health
-📚 API Base: http://localhost:${PORT}/api
-⚡ Socket.io: Enabled
-🔒 Security: Helmet, CORS, Rate Limiting
-📝 Logging: ${NODE_ENV === "development" ? "Development" : "Production"} mode
-  `);
+// Start server
+const PORT = process.env.PORT || 3001;
+
+// Add error handling for server
+server.on("error", (error) => {
+  console.error("Server error:", error);
 });
 
-process.on("SIGTERM", () => {
-  console.log("SIGTERM received. Shutting down gracefully...");
-  server.close(() => {
-    console.log("Process terminated");
+// Start server with graceful error handling
+try {
+  server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
   });
-});
+} catch (error) {
+  console.error("Failed to start server:", error);
+  process.exit(1);
+}
 
+// Export for testing
 export { app, io };
