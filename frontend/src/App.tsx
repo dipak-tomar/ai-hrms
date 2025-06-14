@@ -1,5 +1,5 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from './stores/authStore';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -20,14 +20,48 @@ import ReportsPage from './pages/ReportsPage';
 import ChatbotWidget from './components/ChatbotWidget';
 
 function App() {
-  const { user } = useAuthStore();
+  const user = useAuthStore(state => state.user);
+  const token = useAuthStore(state => state.token);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Wait for auth state to be loaded from storage
+  useEffect(() => {
+    // Short timeout to ensure the persisted state is loaded
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Handle redirects after auth state is loaded
+  useEffect(() => {
+    if (isLoading) return; // Don't redirect while loading
+
+    // If user is authenticated and on login/register pages, redirect to dashboard
+    if (user && token && (location.pathname === '/login' || location.pathname === '/register')) {
+      navigate('/dashboard');
+    }
+    
+    // Handle root path redirect only if auth state is loaded
+    if (location.pathname === '/' && !isLoading) {
+      navigate('/dashboard');
+    }
+  }, [user, token, location.pathname, navigate, isLoading]);
+
+  if (isLoading) {
+    return <div className="min-h-screen bg-surface flex items-center justify-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+    </div>;
+  }
 
   return (
     <div className="min-h-screen bg-surface font-body">
       <Routes>
-        <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <LoginPage />} />
-        <Route path="/register" element={user ? <Navigate to="/dashboard" /> : <RegisterPage />} />
-        <Route path="/" element={<Navigate to="/dashboard" />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
         
         <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
           <Route path="/dashboard" element={<DashboardPage />} />

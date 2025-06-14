@@ -17,6 +17,31 @@ class EmployeeService {
     const userPassword = password || generate(12);
     const hashedPassword = await userService.hashPassword(userPassword);
 
+    // Safely parse dates
+    let dateOfJoining: Date | undefined;
+    let dateOfBirth: Date | undefined;
+    
+    try {
+      if (employeeInfo.dateOfJoining) {
+        dateOfJoining = new Date(employeeInfo.dateOfJoining);
+        if (isNaN(dateOfJoining.getTime())) {
+          throw new Error("Invalid date of joining format");
+        }
+      } else {
+        // Default to current date if not provided
+        dateOfJoining = new Date();
+      }
+      
+      if (employeeInfo.dateOfBirth) {
+        dateOfBirth = new Date(employeeInfo.dateOfBirth);
+        if (isNaN(dateOfBirth.getTime())) {
+          dateOfBirth = undefined; // Skip if invalid
+        }
+      }
+    } catch (error: any) {
+      throw new Error(`Invalid date format: ${error.message}`);
+    }
+
     return this.prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
         data: {
@@ -31,8 +56,8 @@ class EmployeeService {
           ...employeeInfo,
           employeeId,
           email,
-          dateOfJoining: new Date(employeeInfo.dateOfJoining),
-          dateOfBirth: employeeInfo.dateOfBirth ? new Date(employeeInfo.dateOfBirth) : undefined,
+          dateOfJoining,
+          dateOfBirth,
           user: {
             connect: { id: user.id },
           },
@@ -146,11 +171,28 @@ class EmployeeService {
   public async updateEmployee(id: string, employeeData: UpdateEmployeeDto) {
     const { managerId, ...restData } = employeeData;
 
+    // Safely parse dates
     const data: Prisma.EmployeeUpdateInput = {
-      ...restData,
-      dateOfJoining: restData.dateOfJoining ? new Date(restData.dateOfJoining) : undefined,
-      dateOfBirth: restData.dateOfBirth ? new Date(restData.dateOfBirth) : undefined,
+      ...restData
     };
+    
+    try {
+      if (restData.dateOfJoining) {
+        const dateOfJoining = new Date(restData.dateOfJoining);
+        if (!isNaN(dateOfJoining.getTime())) {
+          data.dateOfJoining = dateOfJoining;
+        }
+      }
+      
+      if (restData.dateOfBirth) {
+        const dateOfBirth = new Date(restData.dateOfBirth);
+        if (!isNaN(dateOfBirth.getTime())) {
+          data.dateOfBirth = dateOfBirth;
+        }
+      }
+    } catch (error: any) {
+      throw new Error(`Invalid date format: ${error.message}`);
+    }
     
     if (managerId !== undefined) {
       if (managerId === null) {

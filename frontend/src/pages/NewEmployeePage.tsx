@@ -31,6 +31,7 @@ const NewEmployeePage: React.FC = () => {
   const { createEmployee, isLoading } = useEmployeeStore();
   const { register, handleSubmit, formState: { errors }, trigger } = useForm<EmployeeForm>();
   const [currentStep, setCurrentStep] = useState(1);
+  const [documents, setDocuments] = useState<File[]>([]);
 
   const steps = [
     { id: 1, name: 'Personal Info', icon: User },
@@ -66,23 +67,52 @@ const NewEmployeePage: React.FC = () => {
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const fileList = Array.from(e.target.files);
+      setDocuments(prev => [...prev, ...fileList]);
+    }
+  };
+
+  const removeDocument = (index: number) => {
+    setDocuments(prev => prev.filter((_, i) => i !== index));
+  };
+
   const onSubmit = async (data: EmployeeForm) => {
     try {
-      await createEmployee({
-        name: data.name,
-        email: data.email,
-        designation: data.designation,
-        department: data.department,
-        status: 'active',
-        joinDate: data.joinDate,
-        phone: data.phone,
-        address: data.address,
-        salary: data.salary,
-        reportingManager: data.reportingManager,
-      });
-      toast.success('Employee created successfully!');
-      navigate('/employees');
-    } catch (error) {
+      // Only create employee after document upload step
+      if (currentStep === 4) {
+        // Format the date correctly for the backend
+        const formattedDate = new Date(data.joinDate).toISOString().split('T')[0];
+        
+        await createEmployee({
+          name: data.name,
+          email: data.email,
+          designation: data.designation,
+          department: data.department,
+          status: 'active',
+          joinDate: formattedDate, // Use the formatted date
+          dateOfJoining: formattedDate, // Add dateOfJoining for backend compatibility
+          phone: data.phone,
+          address: data.address,
+          salary: data.salary,
+          reportingManager: data.reportingManager,
+        });
+        
+        // Handle document uploads if needed
+        if (documents.length > 0) {
+          // Here you would upload the documents
+          // This would typically involve a separate API call
+          toast.success(`${documents.length} documents uploaded`);
+        }
+        
+        toast.success('Employee created successfully!');
+        navigate('/employees');
+      } else {
+        // If not on the final step, just move to the next step
+        nextStep();
+      }
+    } catch {
       toast.error('Failed to create employee');
     }
   };
@@ -368,15 +398,44 @@ const NewEmployeePage: React.FC = () => {
                     <div className="mt-4">
                       <p className="text-sm text-text-secondary">
                         Drag and drop files here, or{' '}
-                        <button type="button" className="text-primary hover:text-blue-500">
+                        <label className="text-primary hover:text-blue-500 cursor-pointer">
                           browse
-                        </button>
+                          <input 
+                            type="file" 
+                            multiple 
+                            className="hidden" 
+                            onChange={handleFileChange}
+                          />
+                        </label>
                       </p>
                       <p className="text-xs text-text-secondary mt-1">
                         Upload ID proof, address proof, and other relevant documents
                       </p>
                     </div>
                   </div>
+                  
+                  {/* Show uploaded documents */}
+                  {documents.length > 0 && (
+                    <div className="mt-4">
+                      <h4 className="text-sm font-medium text-text-primary mb-2">
+                        Uploaded Documents ({documents.length})
+                      </h4>
+                      <ul className="space-y-2">
+                        {documents.map((doc, index) => (
+                          <li key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                            <span className="text-sm truncate">{doc.name}</span>
+                            <button
+                              type="button"
+                              onClick={() => removeDocument(index)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              Remove
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

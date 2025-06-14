@@ -9,6 +9,7 @@ export interface Employee {
   department: string;
   status: 'active' | 'inactive' | 'terminated';
   joinDate: string;
+  dateOfJoining?: string;
   avatar?: string;
   phone?: string;
   address?: string;
