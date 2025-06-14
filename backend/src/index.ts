@@ -16,7 +16,8 @@ import { notFound } from './middleware/notFound';
 import { rateLimiter } from './middleware/rateLimiter';
 
 // Import routes (will be created in next phases)
-// import authRoutes from './routes/auth';
+import authRoutes from './routes/auth.routes';
+import departmentRoutes from './routes/department.routes';
 // import employeeRoutes from './routes/employees';
 
 const app = express();
@@ -98,7 +99,8 @@ app.get('/api', (req, res) => {
 });
 
 // Routes (will be uncommented as we implement them)
-// app.use('/api/auth', authRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/departments', departmentRoutes);
 // app.use('/api/employees', employeeRoutes);
 
 // Socket.io Connection Handling
