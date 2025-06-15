@@ -276,8 +276,10 @@ model Notification {
   title     String
   message   String
   type      NotificationType
+  priority  String             @default("MEDIUM")
   isRead    Boolean            @default(false)
-  data      Json?              // Additional data as JSON
+  readAt    DateTime?
+  metadata  Json?              // Additional data as JSON
   createdAt DateTime           @default(now())
 
   // Relations

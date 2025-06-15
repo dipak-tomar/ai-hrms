@@ -13,6 +13,7 @@ dotenv.config();
 import { errorHandler } from "./middleware/errorHandler";
 import { notFound } from "./middleware/notFound";
 import { rateLimiter } from "./middleware/rateLimiter";
+import SocketService from "./services/socket.service";
 
 import authRoutes from "./routes/auth.routes";
 import departmentRoutes from "./routes/department.routes";
@@ -24,6 +25,7 @@ import performanceRoutes from "./routes/performance.routes";
 import chatRoutes from "./routes/chat.routes";
 import resumeParserRoutes from "./routes/resumeParser.routes";
 import analyticsRoutes from "./routes/analytics.routes";
+import notificationRoutes from "./routes/notification.routes";
 
 const app = express();
 const server = createServer(app);
@@ -32,32 +34,19 @@ const server = createServer(app);
 const io = new Server(server, {
   cors: {
     origin: process.env.FRONTEND_URL || "http://localhost:3000",
-    methods: ["GET", "POST"]
-  }
+    methods: ["GET", "POST"],
+    credentials: true
+  },
+  pingTimeout: 60000,
+  pingInterval: 25000
 });
+
+// Initialize socket service
+const socketService = new SocketService(io);
 
 // Handle Socket.io errors
 io.on("error", (error) => {
   console.error("Socket.io error:", error);
-});
-
-// Socket.io connection handling
-io.on("connection", (socket) => {
-  console.log("New client connected");
-  
-  // Join user-specific room for targeted messages
-  socket.on("join-user", (userId) => {
-    socket.join(`user-${userId}`);
-    console.log(`User ${userId} joined their room`);
-  });
-  
-  socket.on("disconnect", () => {
-    console.log("Client disconnected");
-  });
-  
-  socket.on("error", (error) => {
-    console.error("Socket error:", error);
-  });
 });
 
 // Middleware
@@ -80,6 +69,12 @@ app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "ok", timestamp: new Date() });
 });
 
+// Make socket service available to routes
+app.locals.socketService = socketService;
+
+// Initialize services with socket service for real-time updates
+// Note: Services will be imported when routes are loaded, so we'll set this up in the routes
+
 // API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/departments", departmentRoutes);
@@ -91,6 +86,7 @@ app.use("/api/performance", performanceRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/resume-parser", resumeParserRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // Error handling
 app.use(notFound);

@@ -21,6 +21,8 @@ import ResumeParserPage from './pages/ResumeParserPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import ChatbotWidget from './components/ChatbotWidget';
 
+import { socketService } from './services/socket.service';
+
 function App() {
   const user = useAuthStore(state => state.user);
   const token = useAuthStore(state => state.token);
@@ -53,6 +55,20 @@ function App() {
     }
   }, [user, token, location.pathname, navigate, isLoading]);
 
+  // Initialize socket connection when user is authenticated
+  useEffect(() => {
+    if (user && token) {
+      socketService.connect();
+    } else {
+      socketService.disconnect();
+    }
+
+    // Cleanup on unmount
+    return () => {
+      socketService.disconnect();
+    };
+  }, [user, token]);
+
   if (isLoading) {
     return <div className="min-h-screen bg-surface flex items-center justify-center">
       <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
@@ -83,7 +99,11 @@ function App() {
         </Route>
       </Routes>
       
-      {user && <ChatbotWidget />}
+      {user && (
+        <>
+          <ChatbotWidget />
+        </>
+      )}
     </div>
   );
 }

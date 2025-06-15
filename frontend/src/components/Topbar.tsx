@@ -1,6 +1,7 @@
 import React from 'react';
-import { Menu, Bell, Search } from 'lucide-react';
+import { Menu, Search } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
+import NotificationCenter from './notifications/NotificationCenter';
 
 interface TopbarProps {
   onMenuClick: () => void;
@@ -49,12 +50,7 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuClick }) => {
             </button>
 
             {/* Notifications */}
-            <button
-              type="button"
-              className="bg-white p-1 rounded-full text-text-secondary hover:text-text-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-            >
-              <Bell className="h-6 w-6" />
-            </button>
+            <NotificationCenter />
 
             {/* Profile */}
             <div className="ml-3 relative">

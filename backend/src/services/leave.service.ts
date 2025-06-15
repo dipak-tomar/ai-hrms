@@ -13,9 +13,15 @@ import {
 } from "../types/leave.dto";
 import ical, { ICalEventStatus } from 'ical-generator';
 import { v4 as uuidv4 } from 'uuid';
+import SocketService from './socket.service';
 
 class LeaveService {
   private prisma = new PrismaClient();
+  private socketService?: SocketService;
+
+  setSocketService(socketService: SocketService) {
+    this.socketService = socketService;
+  }
 
   // Leave Type Management
   public async createLeaveType(data: CreateLeaveTypeDto) {
@@ -165,7 +171,7 @@ class LeaveService {
       }
     }
 
-    return this.prisma.leave.update({
+    const updatedLeave = await this.prisma.leave.update({
       where: { id },
       data: updateData,
       include: {
@@ -185,6 +191,15 @@ class LeaveService {
         },
       },
     });
+
+    // Send real-time notification if status changed and socket service is available
+    if (data.status && this.socketService) {
+      if (data.status === LeaveStatus.APPROVED || data.status === LeaveStatus.REJECTED) {
+        await this.socketService.notifyLeaveApproval(id, data.status, userId);
+      }
+    }
+
+    return updatedLeave;
   }
 
   public async cancelLeaveApplication(id: string, employeeId: string) {

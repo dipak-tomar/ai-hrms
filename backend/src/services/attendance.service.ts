@@ -6,11 +6,17 @@ import {
   AttendanceReportDto, 
   AttendanceSummary 
 } from "../types/attendance.dto";
+import SocketService from './socket.service';
 
 class AttendanceService {
   private prisma = new PrismaClient();
   // Standard workday hours (8 hours)
   private standardWorkHours = 8;
+  private socketService?: SocketService;
+
+  setSocketService(socketService: SocketService) {
+    this.socketService = socketService;
+  }
 
   private async getTodaysAttendance(employeeId: string) {
     const today = new Date();
@@ -37,7 +43,7 @@ class AttendanceService {
       throw new Error("You have already clocked in today.");
     }
 
-    return this.prisma.attendance.create({
+    const attendance = await this.prisma.attendance.create({
       data: {
         employee: { connect: { id: employeeId } },
         date: new Date(),
@@ -46,6 +52,17 @@ class AttendanceService {
         notes: data.notes,
       },
     });
+
+    // Send real-time update
+    if (this.socketService) {
+      this.socketService.broadcastAttendanceUpdate(employeeId, 'CLOCK_IN', {
+        attendanceId: attendance.id,
+        clockIn: attendance.clockIn,
+        status: attendance.status
+      });
+    }
+
+    return attendance;
   }
 
   public async clockOut(employeeId: string, data: ClockOutDto) {
@@ -85,7 +102,7 @@ class AttendanceService {
       status = AttendanceStatus.HALF_DAY;
     }
 
-    return this.prisma.attendance.update({
+    const updatedAttendance = await this.prisma.attendance.update({
       where: { id: todaysAttendance.id },
       data: {
         clockOut: clockOutTime,
@@ -96,6 +113,19 @@ class AttendanceService {
         notes: todaysAttendance.notes ? `${todaysAttendance.notes}\n${data.notes}` : data.notes,
       },
     });
+
+    // Send real-time update
+    if (this.socketService) {
+      this.socketService.broadcastAttendanceUpdate(employeeId, 'CLOCK_OUT', {
+        attendanceId: updatedAttendance.id,
+        clockOut: updatedAttendance.clockOut,
+        totalHours: updatedAttendance.totalHours,
+        overtime: updatedAttendance.overtime,
+        status: updatedAttendance.status
+      });
+    }
+
+    return updatedAttendance;
   }
 
   public async updateBreakTime(data: BreakTimeDto) {
