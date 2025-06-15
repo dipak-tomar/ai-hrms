@@ -23,6 +23,7 @@ import payrollRoutes from "./routes/payroll.routes";
 import performanceRoutes from "./routes/performance.routes";
 import chatRoutes from "./routes/chat.routes";
 import resumeParserRoutes from "./routes/resumeParser.routes";
+import analyticsRoutes from "./routes/analytics.routes";
 
 const app = express();
 const server = createServer(app);
@@ -89,6 +90,7 @@ app.use("/api/payroll", payrollRoutes);
 app.use("/api/performance", performanceRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/resume-parser", resumeParserRoutes);
+app.use("/api/analytics", analyticsRoutes);
 
 // Error handling
 app.use(notFound);
