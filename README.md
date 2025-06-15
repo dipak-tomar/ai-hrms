@@ -1,66 +1,49 @@
 # AI-Powered Enterprise HRMS System
 
-A comprehensive Human Resource Management System with AI features, built with modern technologies for scalability and performance.
+## Overview of the System and Its Features
 
-## 🏗️ Architecture
+A comprehensive Human Resource Management System powered by artificial intelligence to streamline HR operations and enhance decision-making.
 
-- **Frontend**: React.js with TypeScript, Tailwind CSS, and modern UI components
-- **Backend**: Node.js with Express.js, TypeScript, and RESTful APIs
-- **Database**: PostgreSQL with Prisma ORM
-- **Cache**: Redis for sessions and real-time features
-- **AI**: OpenAI integration for intelligent HR features
-- **Real-time**: Socket.io for live updates and notifications
+### Core Features
+- **Employee Management**: Complete employee lifecycle management with profiles, onboarding, and offboarding
+- **Attendance Tracking**: Real-time clock in/out system with timesheet management
+- **Leave Management**: Automated leave requests, approvals, and balance tracking
+- **Payroll Processing**: Automated salary calculations, deductions, and payroll reports
+- **Performance Management**: Goal setting, performance reviews, and evaluation tracking
+- **Department Management**: Organizational structure and hierarchy management
 
-## 📁 Project Structure
+### AI-Powered Features
+- **Smart Recruitment**: AI-assisted candidate screening and ranking
+- **Performance Analytics**: AI-driven insights into employee performance patterns
+- **Predictive Analytics**: Employee retention and satisfaction predictions
+- **Automated Reporting**: AI-generated HR reports and insights
+- **Intelligent Notifications**: Smart alerts and reminders based on HR events
 
-```
-ai-hrms/
-├── frontend/          # React.js frontend application
-├── backend/           # Node.js backend API
-├── package.json       # Root package.json with workspace scripts
-├── .gitignore         # Git ignore rules for both frontend and backend
-└── README.md          # This file
-```
-
-## 🚀 Quick Start
+## Instructions for Setting Up the Project Locally
 
 ### Prerequisites
-
-- Node.js >= 18.0.0
-- npm >= 8.0.0
+- Node.js (version 18 or higher)
+- npm (version 8 or higher)
 - PostgreSQL database
 - Redis server
 
-### Installation
+### Setup Steps
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone <your-repository-url>
    cd ai-hrms
    ```
 
-2. **Install all dependencies**
+2. **Install dependencies**
    ```bash
    npm run install:all
    ```
 
 3. **Set up environment variables**
-   
-   **Backend** (`backend/.env`):
-   ```env
-   DATABASE_URL="postgresql://username:password@localhost:5432/ai_hrms"
-   REDIS_URL="redis://localhost:6379"
-   JWT_SECRET="your-super-secret-jwt-key"
-   OPENAI_API_KEY="your-openai-api-key"
-   NODE_ENV="development"
-   PORT=3001
-   ```
-
-   **Frontend** (`frontend/.env.local`):
-   ```env
-   NEXT_PUBLIC_API_URL="http://localhost:3001/api"
-   NEXT_PUBLIC_SOCKET_URL="http://localhost:3001"
-   ```
+   - Copy `backend/env.example` to `backend/.env`
+   - Copy `frontend/env.example` to `frontend/.env.local`
+   - Update the environment files with your database, Redis, and API keys
 
 4. **Set up the database**
    ```bash
@@ -68,164 +51,85 @@ ai-hrms/
    npm run db:seed
    ```
 
-5. **Start development servers**
+5. **Start the development servers**
    ```bash
    npm run dev
    ```
 
-   This will start both frontend (http://localhost:3000) and backend (http://localhost:3001)
+6. **Access the application**
+   - Frontend: ai-hrms-frontend-production.up.railway.app
+   - Backend API: ai-hrms-backend-production.up.railway.app/api
 
-## 📜 Available Scripts
 
-### Development
-- `npm run dev` - Start both frontend and backend in development mode
-- `npm run dev:frontend` - Start only frontend development server
-- `npm run dev:backend` - Start only backend development server
 
-### Building
-- `npm run build` - Build both frontend and backend for production
-- `npm run build:frontend` - Build only frontend
-- `npm run build:backend` - Build only backend
+## Screenshots or Video Demo
 
-### Production
-- `npm run start` - Start both frontend and backend in production mode
-- `npm run start:frontend` - Start only frontend production server
-- `npm run start:backend` - Start only backend production server
+*Add screenshots or video demo of your application here*
 
-### Database Management
-- `npm run db:generate` - Generate Prisma client
-- `npm run db:migrate` - Run database migrations
-- `npm run db:seed` - Seed database with initial data
-- `npm run db:studio` - Open Prisma Studio
-- `npm run db:reset` - Reset database (⚠️ destructive)
+## Stack Used and AI Models/APIs Implemented
 
-### Testing & Quality
-- `npm run test` - Run tests for both frontend and backend
-- `npm run lint` - Run linting for both projects
-- `npm run type-check` - Run TypeScript type checking
+### Frontend Stack
+- **React.js** with TypeScript
+- **Tailwind CSS** for styling
+- **Vite** for build tooling
+- **React Router** for navigation
+- **React Query** for state management
 
-### Utilities
-- `npm run install:all` - Install dependencies for both projects
-- `npm run clean` - Clean node_modules and build artifacts
-- `npm run docker:build` - Build Docker containers
-- `npm run docker:up` - Start Docker containers
-- `npm run docker:down` - Stop Docker containers
+### Backend Stack
+- **Node.js** with Express.js
+- **TypeScript** for type safety
+- **PostgreSQL** with Prisma ORM
+- **Redis** for caching and sessions
+- **Socket.io** for real-time features
+- **JWT** for authentication
 
-## 🔧 Development Workflow
+### AI Models/APIs
+- **OpenAI GPT API** for intelligent text processing and insights
+- **OpenAI Embeddings** for document similarity and search
+- **Custom ML models** for performance prediction
+- **Natural Language Processing** for resume parsing and analysis
 
-1. **Start development environment**
-   ```bash
-   npm run dev
-   ```
+## Notes on Scaling or Deployment Architecture
 
-2. **Make changes to frontend or backend**
-   - Frontend files are in `frontend/`
-   - Backend files are in `backend/`
+### Scalability Features
+- **Microservices Architecture**: Backend designed as modular services
+- **Database Optimization**: Indexed queries and connection pooling
+- **Caching Strategy**: Redis for session management and frequently accessed data
+- **Load Balancing**: Ready for horizontal scaling with multiple server instances
 
-3. **Database changes**
-   ```bash
-   # After modifying schema.prisma
-   npm run db:migrate
-   ```
-
-4. **Testing**
-   ```bash
-   npm run test
-   npm run lint
-   npm run type-check
-   ```
-
-## 🌟 Features
-
-### Core HRMS Features
-- **Employee Management**: Complete employee lifecycle management
-- **Attendance Tracking**: Clock in/out, timesheet management
-- **Leave Management**: Leave requests, approvals, and tracking
-- **Payroll Processing**: Salary calculations, deductions, and reports
-- **Performance Management**: Goals, reviews, and evaluations
-- **Department Management**: Organizational structure and hierarchies
-
-### AI-Powered Features
-- **Smart Recruitment**: AI-assisted candidate screening
-- **Performance Insights**: AI-driven performance analytics
-- **Predictive Analytics**: Employee retention and satisfaction predictions
-- **Automated Reporting**: AI-generated HR reports and insights
-
-### Technical Features
-- **Real-time Updates**: Live notifications and data synchronization
-- **Role-based Access**: Granular permissions and security
-- **Multi-tenant Support**: Support for multiple organizations
-- **API-first Design**: RESTful APIs for integrations
-- **Responsive Design**: Mobile-friendly interface
-
-## 🔐 Security
-
-- JWT-based authentication
-- Role-based access control (RBAC)
-- Rate limiting and request validation
-- Secure password hashing with bcrypt
-- CORS and security headers
-- Environment-based configuration
-
-## 📊 Database Schema
-
-The system uses PostgreSQL with the following main entities:
-- Users & Authentication
-- Companies & Departments
-- Employees & Profiles
-- Attendance & Time Tracking
-- Leave Management
-- Payroll & Compensation
-- Performance Management
-- Notifications & Audit Logs
-
-## 🚀 Deployment
-
-### Railway Full-Stack (Recommended)
-Deploy both frontend and backend on Railway:
-
-```bash
-# Quick deployment
-./scripts/railway-deploy.sh
-
-# Or use npm scripts
-npm run railway:login
-npm run railway:init
-npm run deploy:railway
-```
-
-See [RAILWAY_DEPLOYMENT.md](RAILWAY_DEPLOYMENT.md) for detailed instructions.
-
-### Alternative Options
+### Deployment Options
+- **Railway**: Full-stack deployment with automatic CI/CD
 - **Vercel + Railway**: Frontend on Vercel, Backend on Railway
-- **Docker**: Container-based deployment
-- **Traditional VPS**: Manual server setup
+- **Docker**: Containerized deployment for any cloud provider
+- **Traditional VPS**: Manual deployment on virtual private servers
 
-### Docker
-```bash
-npm run docker:build
-npm run docker:up
+### Performance Considerations
+- **API Rate Limiting**: Prevents abuse and ensures fair usage
+- **Database Connection Pooling**: Efficient database resource management
+- **Static Asset Optimization**: Compressed and cached frontend assets
+- **Real-time Updates**: WebSocket connections for live data synchronization
+
+## .env.example File for Local Configuration
+
+### Backend Environment Variables (`backend/env.example`)
+```env
+DATABASE_URL="postgresql://username:password@localhost:5432/ai_hrms"
+REDIS_URL="redis://localhost:6379"
+JWT_SECRET="your-super-secret-jwt-key"
+OPENAI_API_KEY="your-openai-api-key"
+NODE_ENV="development"
+PORT=3001
 ```
 
-## 🤝 Contributing
+### Frontend Environment Variables (`frontend/env.example`)
+```env
+VITE_API_BASE_URL="http://localhost:3001/api"
+VITE_APP_NAME="AI HRMS"
+VITE_ENABLE_AI_FEATURES="true"
+```
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests and linting
-5. Submit a pull request
+## Backend Hosted Link (if separate)
 
-## 📝 License
+🔗 **Backend API**: [Your Backend API URL Here]
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🆘 Support
-
-For support and questions:
-- Create an issue in the repository
-- Check the documentation in each project folder
-- Review the API documentation at `/api/docs` when running the backend
-
----
-
-**Happy coding! 🎉** 
+📚 **API Documentation**: [Your API Docs URL Here] 
