@@ -271,6 +271,286 @@ export interface TeamPerformance {
   goalCompletionRate: number;
 }
 
+// Resume Parser Types
+export interface Candidate {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  dateOfBirth?: string;
+  address?: {
+    city?: string;
+    state?: string;
+    country?: string;
+    zipCode?: string;
+    street?: string;
+  };
+  profileSummary?: string;
+  totalExperience?: number;
+  expectedSalary?: number;
+  currentSalary?: number;
+  noticePeriod?: string;
+  status: 'NEW' | 'REVIEWED' | 'SHORTLISTED' | 'INTERVIEW_SCHEDULED' | 'INTERVIEWED' | 'SELECTED' | 'REJECTED' | 'HIRED' | 'WITHDRAWN';
+  source?: string;
+  referredBy?: string;
+  linkedinUrl?: string;
+  portfolioUrl?: string;
+  githubUrl?: string;
+  skills?: Skill[];
+  createdAt: string;
+  updatedAt: string;
+  resumes?: Resume[];
+  applications?: JobApplication[];
+  interviews?: Interview[];
+  _count?: {
+    applications: number;
+    interviews: number;
+  };
+}
+
+export interface Resume {
+  id: string;
+  candidateId: string;
+  originalFileName: string;
+  filePath: string;
+  fileType: string;
+  fileSize: number;
+  rawText: string;
+  parsedData: ParsedResumeData;
+  skills?: Skill[];
+  experience?: WorkExperience[];
+  education?: Education[];
+  certifications?: Certification[];
+  languages?: Language[];
+  projects?: Project[];
+  aiScore?: number;
+  keywordMatches?: string[];
+  isLatest: boolean;
+  uploadedAt: string;
+  parsedAt?: string;
+  jobMatches?: JobMatch[];
+}
+
+export interface ParsedResumeData {
+  personalInfo: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    address?: {
+      city?: string;
+      state?: string;
+      country?: string;
+      zipCode?: string;
+      street?: string;
+    };
+    dateOfBirth?: string;
+    linkedinUrl?: string;
+    portfolioUrl?: string;
+    githubUrl?: string;
+  };
+  professionalSummary?: string;
+  skills: Skill[];
+  experience: WorkExperience[];
+  education: Education[];
+  certifications?: Certification[];
+  projects?: Project[];
+  languages?: Language[];
+  totalExperience?: number;
+}
+
+export interface Skill {
+  name: string;
+  category: string;
+  proficiency?: string;
+}
+
+export interface WorkExperience {
+  company: string;
+  position: string;
+  startDate: string;
+  endDate?: string;
+  description: string;
+  responsibilities: string[];
+  achievements?: string[];
+}
+
+export interface Education {
+  institution: string;
+  degree: string;
+  field: string;
+  startDate: string;
+  endDate?: string;
+  grade?: string;
+  achievements?: string[];
+}
+
+export interface Certification {
+  name: string;
+  issuer: string;
+  issueDate?: string;
+  expiryDate?: string;
+  credentialId?: string;
+}
+
+export interface Project {
+  name: string;
+  description: string;
+  technologies: string[];
+  startDate?: string;
+  endDate?: string;
+  url?: string;
+}
+
+export interface Language {
+  name: string;
+  proficiency: string;
+}
+
+export interface Job {
+  id: string;
+  title: string;
+  departmentId: string;
+  description: string;
+  requirements: string[];
+  skills: string[];
+  experienceMin: number;
+  experienceMax?: number;
+  salaryMin?: number;
+  salaryMax?: number;
+  location: string;
+  type: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'TEMPORARY' | 'INTERNSHIP';
+  status: 'DRAFT' | 'OPEN' | 'CLOSED' | 'ON_HOLD';
+  postedBy: string;
+  postedAt: string;
+  closingDate?: string;
+  createdAt: string;
+  updatedAt: string;
+  department?: Department;
+  poster?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  applications?: JobApplication[];
+  jobMatches?: JobMatch[];
+  interviews?: Interview[];
+  _count?: {
+    applications: number;
+    jobMatches: number;
+    interviews: number;
+  };
+}
+
+export interface JobApplication {
+  id: string;
+  candidateId: string;
+  jobId: string;
+  resumeId?: string;
+  coverLetter?: string;
+  status: 'SUBMITTED' | 'UNDER_REVIEW' | 'SHORTLISTED' | 'INTERVIEW_SCHEDULED' | 'INTERVIEWED' | 'SELECTED' | 'REJECTED' | 'WITHDRAWN';
+  appliedAt: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  candidate?: Candidate;
+  job?: Job;
+  reviewer?: Employee;
+}
+
+export interface JobMatch {
+  id: string;
+  resumeId: string;
+  jobId: string;
+  matchScore: number;
+  skillMatches: SkillMatch[];
+  keywordMatches: string[];
+  experienceMatch: boolean;
+  salaryMatch?: boolean;
+  locationMatch?: boolean;
+  createdAt: string;
+  updatedAt: string;
+  resume?: Resume & { candidate: Candidate };
+  job?: Job;
+}
+
+export interface SkillMatch {
+  skill: string;
+  matched: boolean;
+  weight: number;
+}
+
+export interface Interview {
+  id: string;
+  candidateId: string;
+  jobId: string;
+  interviewerId: string;
+  type: 'PHONE' | 'VIDEO' | 'IN_PERSON' | 'TECHNICAL' | 'HR' | 'FINAL';
+  scheduledAt: string;
+  duration: number;
+  location?: string;
+  meetingLink?: string;
+  status: 'SCHEDULED' | 'COMPLETED' | 'CANCELLED' | 'RESCHEDULED' | 'NO_SHOW';
+  feedback?: string;
+  rating?: number;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  candidate?: Candidate;
+  job?: Job;
+  interviewer?: Employee;
+}
+
+export interface ResumeMatchResult {
+  matchScore: number;
+  skillMatches: SkillMatch[];
+  experienceMatch: boolean;
+  keywordMatches: string[];
+  recommendations: string[];
+}
+
+export interface ResumeParserStats {
+  totalCandidates: number;
+  candidatesByStatus: {
+    new: number;
+    reviewed: number;
+    shortlisted: number;
+    interviewed: number;
+    selected: number;
+    rejected: number;
+    hired: number;
+  };
+  topSkills: string[];
+  averageExperience: number;
+}
+
+export interface CandidateFilters {
+  status?: string;
+  skills?: string[];
+  experienceMin?: number;
+  experienceMax?: number;
+}
+
+export interface JobFilters {
+  status?: string;
+  departmentId?: string;
+  type?: string;
+  location?: string;
+}
+
+export interface PaginationResponse<T> {
+  data: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}
+
 // Create axios instance
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -747,6 +1027,237 @@ export const performanceService = {
   
   getTeamPerformance: async (departmentId: string): Promise<TeamPerformance> => {
     const response = await apiClient.get(`/performance/metrics/departments/${departmentId}`);
+    return response.data;
+  },
+};
+
+export const resumeParserService = {
+  // Resume Upload & Parsing
+  uploadResume: async (file: File): Promise<{ candidate: Candidate; resume: Resume }> => {
+    const formData = new FormData();
+    formData.append('resume', file);
+    
+    const response = await apiClient.post('/resume-parser/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  // Candidates Management
+  getCandidates: async (params?: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    skills?: string[];
+    experienceMin?: number;
+    experienceMax?: number;
+    search?: string;
+  }): Promise<PaginationResponse<Candidate>> => {
+    const response = await apiClient.get('/resume-parser/candidates', { params });
+    return response.data;
+  },
+
+  getCandidateById: async (id: string): Promise<Candidate> => {
+    const response = await apiClient.get(`/resume-parser/candidates/${id}`);
+    return response.data;
+  },
+
+  updateCandidate: async (id: string, data: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phone?: string;
+    status?: string;
+    profileSummary?: string;
+    expectedSalary?: number;
+    currentSalary?: number;
+    noticePeriod?: string;
+    linkedinUrl?: string;
+    portfolioUrl?: string;
+    githubUrl?: string;
+  }): Promise<{ candidate: Candidate }> => {
+    const response = await apiClient.put(`/resume-parser/candidates/${id}`, data);
+    return response.data;
+  },
+
+  deleteCandidate: async (id: string): Promise<{ message: string }> => {
+    const response = await apiClient.delete(`/resume-parser/candidates/${id}`);
+    return response.data;
+  },
+
+  // Resumes Management
+  getResumes: async (params?: {
+    candidateId?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<PaginationResponse<Resume>> => {
+    const response = await apiClient.get('/resume-parser/resumes', { params });
+    return response.data;
+  },
+
+  getResumeById: async (id: string): Promise<Resume> => {
+    const response = await apiClient.get(`/resume-parser/resumes/${id}`);
+    return response.data;
+  },
+
+  downloadResume: async (id: string): Promise<Blob> => {
+    const response = await apiClient.get(`/resume-parser/resumes/${id}/download`, {
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  deleteResume: async (id: string): Promise<{ message: string }> => {
+    const response = await apiClient.delete(`/resume-parser/resumes/${id}`);
+    return response.data;
+  },
+
+  // Job Matching
+  matchResumeWithJob: async (resumeId: string, jobId: string): Promise<ResumeMatchResult> => {
+    const response = await apiClient.post('/resume-parser/match', { resumeId, jobId });
+    return response.data;
+  },
+
+  getJobMatches: async (params?: {
+    resumeId?: string;
+    jobId?: string;
+    minScore?: number;
+    page?: number;
+    limit?: number;
+  }): Promise<PaginationResponse<JobMatch>> => {
+    const response = await apiClient.get('/resume-parser/matches', { params });
+    return response.data;
+  },
+
+  // Statistics & Analytics
+  getStats: async (): Promise<ResumeParserStats> => {
+    const response = await apiClient.get('/resume-parser/stats');
+    return response.data;
+  },
+};
+
+export const jobService = {
+  // Job Management
+  getJobs: async (params?: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    departmentId?: string;
+    type?: string;
+    location?: string;
+    search?: string;
+  }): Promise<PaginationResponse<Job>> => {
+    const response = await apiClient.get('/jobs', { params });
+    return response.data;
+  },
+
+  getJobById: async (id: string): Promise<Job> => {
+    const response = await apiClient.get(`/jobs/${id}`);
+    return response.data;
+  },
+
+  createJob: async (data: {
+    title: string;
+    departmentId: string;
+    description: string;
+    requirements: string[];
+    skills: string[];
+    experienceMin: number;
+    experienceMax?: number;
+    salaryMin?: number;
+    salaryMax?: number;
+    location: string;
+    type: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'TEMPORARY' | 'INTERNSHIP';
+    closingDate?: string;
+  }): Promise<{ job: Job }> => {
+    const response = await apiClient.post('/jobs', data);
+    return response.data;
+  },
+
+  updateJob: async (id: string, data: {
+    title?: string;
+    description?: string;
+    requirements?: string[];
+    skills?: string[];
+    experienceMin?: number;
+    experienceMax?: number;
+    salaryMin?: number;
+    salaryMax?: number;
+    location?: string;
+    type?: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'TEMPORARY' | 'INTERNSHIP';
+    status?: 'DRAFT' | 'OPEN' | 'CLOSED' | 'ON_HOLD';
+    closingDate?: string;
+  }): Promise<{ job: Job }> => {
+    const response = await apiClient.put(`/jobs/${id}`, data);
+    return response.data;
+  },
+
+  deleteJob: async (id: string): Promise<{ message: string }> => {
+    const response = await apiClient.delete(`/jobs/${id}`);
+    return response.data;
+  },
+
+  // Job Applications
+  getJobApplications: async (params?: {
+    jobId?: string;
+    candidateId?: string;
+    status?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<PaginationResponse<JobApplication>> => {
+    const response = await apiClient.get('/jobs/applications', { params });
+    return response.data;
+  },
+
+  updateApplicationStatus: async (id: string, data: {
+    status: 'SUBMITTED' | 'UNDER_REVIEW' | 'SHORTLISTED' | 'INTERVIEW_SCHEDULED' | 'INTERVIEWED' | 'SELECTED' | 'REJECTED' | 'WITHDRAWN';
+    notes?: string;
+  }): Promise<{ application: JobApplication }> => {
+    const response = await apiClient.put(`/jobs/applications/${id}`, data);
+    return response.data;
+  },
+
+  // Interviews
+  getInterviews: async (params?: {
+    candidateId?: string;
+    jobId?: string;
+    interviewerId?: string;
+    status?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<PaginationResponse<Interview>> => {
+    const response = await apiClient.get('/interviews', { params });
+    return response.data;
+  },
+
+  scheduleInterview: async (data: {
+    candidateId: string;
+    jobId: string;
+    interviewerId: string;
+    type: 'PHONE' | 'VIDEO' | 'IN_PERSON' | 'TECHNICAL' | 'HR' | 'FINAL';
+    scheduledAt: string;
+    duration: number;
+    location?: string;
+    meetingLink?: string;
+    notes?: string;
+  }): Promise<{ interview: Interview }> => {
+    const response = await apiClient.post('/interviews', data);
+    return response.data;
+  },
+
+  updateInterview: async (id: string, data: {
+    scheduledAt?: string;
+    duration?: number;
+    location?: string;
+    meetingLink?: string;
+    status?: 'SCHEDULED' | 'COMPLETED' | 'CANCELLED' | 'RESCHEDULED' | 'NO_SHOW';
+    feedback?: string;
+    rating?: number;
+    notes?: string;
+  }): Promise<{ interview: Interview }> => {
+    const response = await apiClient.put(`/interviews/${id}`, data);
     return response.data;
   },
 };

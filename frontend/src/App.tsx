@@ -17,6 +17,7 @@ import LeavePage from './pages/LeavePage';
 import PayrollPage from './pages/PayrollPage';
 import PerformancePage from './pages/PerformancePage';
 import ReportsPage from './pages/ReportsPage';
+import ResumeParserPage from './pages/ResumeParserPage';
 import ChatbotWidget from './components/ChatbotWidget';
 
 function App() {
@@ -75,6 +76,7 @@ function App() {
           <Route path="/leave" element={<LeavePage />} />
           <Route path="/payroll" element={<PayrollPage />} />
           <Route path="/performance" element={<PerformancePage />} />
+          <Route path="/resume-parser" element={<ResumeParserPage />} />
           <Route path="/reports" element={<ReportsPage />} />
         </Route>
       </Routes>
