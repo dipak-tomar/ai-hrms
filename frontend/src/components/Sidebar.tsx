@@ -10,7 +10,8 @@ import {
   FileText,
   LogOut,
   X,
-  FileSearch
+  FileSearch,
+  BarChart3
 } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 import clsx from 'clsx';
@@ -27,6 +28,7 @@ const navigationItems = [
   { name: 'Leave', href: '/leave', icon: Calendar },
   { name: 'Payroll', href: '/payroll', icon: DollarSign },
   { name: 'Performance', href: '/performance', icon: TrendingUp },
+  { name: 'Analytics', href: '/analytics', icon: BarChart3 },
   { name: 'Resume Parser', href: '/resume-parser', icon: FileSearch },
   { name: 'Reports', href: '/reports', icon: FileText },
 ];
