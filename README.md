@@ -181,11 +181,25 @@ The system uses PostgreSQL with the following main entities:
 
 ## 🚀 Deployment
 
-### Vercel + Railway (Recommended)
-- Frontend: Deploy to Vercel
-- Backend: Deploy to Railway
-- Database: Railway PostgreSQL
-- Redis: Railway Redis
+### Railway Full-Stack (Recommended)
+Deploy both frontend and backend on Railway:
+
+```bash
+# Quick deployment
+./scripts/railway-deploy.sh
+
+# Or use npm scripts
+npm run railway:login
+npm run railway:init
+npm run deploy:railway
+```
+
+See [RAILWAY_DEPLOYMENT.md](RAILWAY_DEPLOYMENT.md) for detailed instructions.
+
+### Alternative Options
+- **Vercel + Railway**: Frontend on Vercel, Backend on Railway
+- **Docker**: Container-based deployment
+- **Traditional VPS**: Manual server setup
 
 ### Docker
 ```bash

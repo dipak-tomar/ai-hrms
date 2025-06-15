@@ -21,7 +21,14 @@
     "dev:frontend": "cd frontend && npm run dev",
     "build:backend": "cd backend && npm run build",
     "build:frontend": "cd frontend && npm run build",
-    "setup": "npm install && npm run install-all && npm run build"
+    "setup": "npm install && npm run install-all && npm run build",
+    "deploy:railway": "railway up",
+    "deploy:backend": "cd backend && railway up",
+    "deploy:frontend": "cd frontend && railway up",
+    "railway:login": "railway login",
+    "railway:init": "railway init",
+    "railway:logs": "railway logs",
+    "railway:status": "railway status"
   },
   "engines": {
     "node": ">=18.0.0",
