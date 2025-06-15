@@ -13,7 +13,7 @@ name = "backend"
 source = "backend"
 
 [services.build]
-buildCommand = "../scripts/railway-build.sh"
+buildCommand = "npm install --no-audit --no-fund && npm run build"
 startCommand = "npm start"
 
 [services.variables]
@@ -26,7 +26,7 @@ name = "frontend"
 source = "frontend"
 
 [services.build]
-buildCommand = "../scripts/railway-build.sh"
+buildCommand = "npm install --include=optional --no-audit --no-fund && npm run build"
 startCommand = "npm run preview -- --host 0.0.0.0 --port $PORT"
 
 [services.variables]

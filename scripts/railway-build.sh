@@ -33,7 +33,11 @@ if [ -f "package.json" ] && grep -q "vite" package.json; then
     
     # Install dependencies with optional packages
     print_status "Installing dependencies with optional packages..."
-    npm ci --include=optional --no-audit --no-fund
+    # First try npm ci, if it fails due to lock file sync, fall back to npm install
+    npm ci --include=optional --no-audit --no-fund || {
+        print_status "Lock file out of sync, using npm install instead..."
+        npm install --include=optional --no-audit --no-fund
+    }
     
     # Verify Rollup native dependency
     if [ ! -d "node_modules/@rollup/rollup-linux-x64-gnu" ]; then
