@@ -13,7 +13,7 @@ name = "backend"
 source = "backend"
 
 [services.build]
-buildCommand = "npm run build"
+buildCommand = "../scripts/railway-build.sh"
 startCommand = "npm start"
 
 [services.variables]
@@ -26,9 +26,11 @@ name = "frontend"
 source = "frontend"
 
 [services.build]
-buildCommand = "npm run build"
+buildCommand = "../scripts/railway-build.sh"
 startCommand = "npm run preview -- --host 0.0.0.0 --port $PORT"
 
 [services.variables]
 NODE_ENV = "production"
-PORT = "3000" 
+PORT = "3000"
+NPM_CONFIG_INCLUDE = "optional"
+NPM_CONFIG_OPTIONAL = "false" 

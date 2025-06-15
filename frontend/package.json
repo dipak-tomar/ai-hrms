@@ -5,7 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "npm run build:clean && vite build",
+    "build:clean": "rm -rf node_modules/.vite && rm -rf dist",
+    "build:force": "npm run build:install && npm run build",
+    "build:install": "npm ci --include=optional || npm ci",
+    "build:railway": "npm install @rollup/rollup-linux-x64-gnu --save-dev --no-audit || true && npm run build",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "preview": "vite preview",
@@ -53,6 +57,9 @@
     "husky": "^8.0.3",
     "lint-staged": "^15.1.0",
     "prettier": "^3.1.0"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.9.0"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
