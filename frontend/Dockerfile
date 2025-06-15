@@ -1,17 +1,17 @@
-# Frontend Dockerfile for Railway
+# Use Node.js 18 Alpine
 FROM node:18-alpine
 
 # Set working directory
 WORKDIR /app
 
-# Install dependencies for native modules
+# Install system dependencies for node-gyp
 RUN apk add --no-cache python3 make g++
 
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies with all optional packages
-RUN npm ci --include=optional --no-audit --no-fund
+# Install dependencies (use npm install instead of npm ci to handle lock file issues)
+RUN npm install --include=optional --no-audit --no-fund
 
 # Copy source code
 COPY . .
@@ -23,4 +23,4 @@ RUN npm run build
 EXPOSE 3000
 
 # Start the application
-CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "3000"] 
+CMD ["npm", "start"]
