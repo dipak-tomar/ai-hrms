@@ -26,6 +26,7 @@ import chatRoutes from "./routes/chat.routes";
 import resumeParserRoutes from "./routes/resumeParser.routes";
 import analyticsRoutes from "./routes/analytics.routes";
 import notificationRoutes from "./routes/notification.routes";
+import reportsRoutes from "./routes/reports.routes";
 
 const app = express();
 const server = createServer(app);
@@ -87,6 +88,7 @@ app.use("/api/chat", chatRoutes);
 app.use("/api/resume-parser", resumeParserRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/reports", reportsRoutes);
 
 // Error handling
 app.use(notFound);

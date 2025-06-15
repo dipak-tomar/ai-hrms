@@ -1,28 +1,12 @@
 import { create } from 'zustand';
-import { employeeService } from '../api/client';
-
-export interface Employee {
-  id: string;
-  name: string;
-  email: string;
-  designation: string;
-  department: string;
-  status: 'active' | 'inactive' | 'terminated';
-  joinDate: string;
-  dateOfJoining?: string;
-  avatar?: string;
-  phone?: string;
-  address?: string;
-  salary?: number;
-  reportingManager?: string;
-}
+import { employeeService, Employee } from '../api/client';
 
 interface EmployeeState {
   employees: Employee[];
   currentEmployee: Employee | null;
   isLoading: boolean;
   totalCount: number;
-  fetchEmployees: (page?: number, search?: string, filters?: any) => Promise<void>;
+  fetchEmployees: (page?: number, search?: string, filters?: Record<string, unknown>) => Promise<void>;
   fetchEmployee: (id: string) => Promise<void>;
   createEmployee: (employee: Omit<Employee, 'id'>) => Promise<void>;
   updateEmployee: (id: string, updates: Partial<Employee>) => Promise<void>;
@@ -47,8 +31,8 @@ export const useEmployeeStore = create<EmployeeState>((set, get) => ({
       const response = await employeeService.getEmployees(params);
       
       set({ 
-        employees: response.data, 
-        totalCount: response.total,
+        employees: response, 
+        totalCount: response.length,
         isLoading: false 
       });
     } catch (error) {

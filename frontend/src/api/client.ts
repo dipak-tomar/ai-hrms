@@ -630,7 +630,12 @@ export const authService = {
 export const employeeService = {
   getEmployees: async (params?: Record<string, unknown>): Promise<Employee[]> => {
     const response = await apiClient.get('/employees', { params });
-    return response.data;
+    // Handle paginated response structure from backend
+    if (response.data.data && Array.isArray(response.data.data)) {
+      return response.data.data;
+    }
+    // Fallback to direct array response
+    return Array.isArray(response.data) ? response.data : [];
   },
   
   getEmployee: async (id: string): Promise<Employee> => {
